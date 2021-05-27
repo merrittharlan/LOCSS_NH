@@ -1,0 +1,42 @@
+---
+title: "LOCSS_GNSS"
+author: "Merritt Harlan"
+date: "5/26/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load packages}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+## Load RAW GNSS data
+
+```{r gpx}
+GNSS_dir = "GNSS_Raw"
+GNSS_filenames = list.files(GNSS_dir)
+for(i in 1:length(GNSS_filenames)){
+  loc_df = data.frame(read.csv(paste0(GNSS_dir,"/", GNSS_filenames[i]), header = FALSE))
+  colnames(loc_df)= c("lon", "lat", "ele")
+  loc_df$site_name = substr(GNSS_filenames[i], 1, nchar(GNSS_filenames[i])-4)
+  write.csv(loc_df, paste0("GNSS_csv/", substr(GNSS_filenames[i], 1, nchar(GNSS_filenames[i])-4), ".csv"))
+}
+
+```
+
+## Plot GPX data
+
+```{r plot elevation boxplots}
+etrex_df$site_name = as.factor(etrex_df$site_name)
+etrex_df$ele = as.numeric(etrex_df$ele)
+etrex_df$time = as.POSIXct(etrex_df$time)
+
+ggplot(etrex_df, aes(x=site_name, y=ele)) +
+  geom_boxplot()
+
+```

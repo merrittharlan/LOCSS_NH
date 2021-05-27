@@ -1,0 +1,56 @@
+---
+title: "LOCSS NH Etrex data"
+author: "Merritt Harlan"
+date: "5/26/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load packages}
+library(plotKML)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+## Load GPX data
+
+```{r gpx}
+gpx_dir = "Etrex_GPX"
+gpx_filenames = list.files(gpx_dir)
+etrex_df = data.frame()
+for(i in 1:length(gpx_filenames)){
+  gpx_df = data.frame(readGPX(paste0(gpx_dir,"/", gpx_filenames[i]), metadata = FALSE, waypoints = FALSE, routes = FALSE, bounds = FALSE)$tracks)
+  colnames(gpx_df)= c("lon", "lat", "ele", "time")
+  gpx_df$site_name = substr(gpx_filenames[i], 1, nchar(gpx_filenames[i])-15)
+  etrex_df = rbind(etrex_df, gpx_df)
+}
+
+```
+
+## Plot GPX data
+
+```{r plot elevation boxplots}
+etrex_df$site_name = as.factor(etrex_df$site_name)
+etrex_df$ele = as.numeric(etrex_df$ele)
+etrex_df$time = as.POSIXct(etrex_df$time)
+
+ggplot(etrex_df, aes(x=site_name, y=ele)) +
+  geom_boxplot()
+
+```
+
+
+## Summarize GPX data
+
+```{r summarize gpx}
+grouped_gpx = group_by(etrex_df, site_name)
+etrex_summary = summarize(grouped_gpx, mean = mean(ele), median= median(ele), sd = sd(ele))
+head(etrex_summary)
+
+write.csv(etrex_summary, "etrex_summary.csv")
+
+```
